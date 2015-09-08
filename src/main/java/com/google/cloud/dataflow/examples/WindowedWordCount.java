@@ -26,24 +26,29 @@ import com.google.cloud.dataflow.sdk.PipelineResult;
 import com.google.cloud.dataflow.sdk.io.BigQueryIO;
 import com.google.cloud.dataflow.sdk.io.PubsubIO;
 import com.google.cloud.dataflow.sdk.io.TextIO;
+import com.google.cloud.dataflow.sdk.options.DataflowWorkerLoggingOptions;
 import com.google.cloud.dataflow.sdk.options.Default;
 import com.google.cloud.dataflow.sdk.options.Description;
 import com.google.cloud.dataflow.sdk.options.PipelineOptionsFactory;
+import com.google.cloud.dataflow.sdk.runners.DataflowPipelineRunner;
 import com.google.cloud.dataflow.sdk.transforms.DoFn;
 import com.google.cloud.dataflow.sdk.transforms.ParDo;
 import com.google.cloud.dataflow.sdk.transforms.windowing.FixedWindows;
 import com.google.cloud.dataflow.sdk.transforms.windowing.Window;
 import com.google.cloud.dataflow.sdk.values.KV;
 import com.google.cloud.dataflow.sdk.values.PCollection;
-
+import com.google.common.collect.ImmutableMap;
 import org.joda.time.Duration;
 import org.joda.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.google.cloud.dataflow.sdk.options.DataflowWorkerLoggingOptions.Level.DEBUG;
 
 
 /**
@@ -194,8 +199,15 @@ public class WindowedWordCount {
   }
 
   public static void main(String[] args) throws IOException {
+    System.out.print(Charset.defaultCharset());
+
     Options options = PipelineOptionsFactory.fromArgs(args).withValidation().as(Options.class);
     options.setBigQuerySchema(getSchema());
+    options.setRunner(DataflowPipelineRunner.class);
+
+    DataflowWorkerLoggingOptions.WorkerLogLevelOverrides overrides = new DataflowWorkerLoggingOptions.WorkerLogLevelOverrides();
+    overrides.addOverrideForName("com.google.cloud.dataflow.examples", DataflowWorkerLoggingOptions.Level.DEBUG);
+    options.setWorkerLogLevelOverrides(overrides);
     // DataflowExampleUtils creates the necessary input sources to simplify execution of this
     // Pipeline.
     DataflowExampleUtils exampleDataflowUtils = new DataflowExampleUtils(options,
@@ -250,6 +262,7 @@ public class WindowedWordCount {
         .apply(BigQueryIO.Write.to(getTableReference(options)).withSchema(getSchema()));
 
     PipelineResult result = pipeline.run();
+    System.out.print("Completed run");
 
     /**
      * To mock unbounded input from PubSub, we'll now start an auxiliary 'injector' pipeline that
@@ -260,6 +273,6 @@ public class WindowedWordCount {
      * this via a ctrl-C from the command line, or from the developer's console UI for Dataflow
      * pipelines. The PubSub topic will also be deleted at this time.
      */
-    exampleDataflowUtils.mockUnboundedSource(options.getInputFile(), result);
+//    exampleDataflowUtils.mockUnboundedSource(options.getInputFile(), result);
   }
 }

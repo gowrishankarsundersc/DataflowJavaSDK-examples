@@ -34,6 +34,10 @@ import com.google.cloud.dataflow.sdk.util.gcsfs.GcsPath;
 import com.google.cloud.dataflow.sdk.values.KV;
 import com.google.cloud.dataflow.sdk.values.PCollection;
 
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
+
+import java.util.logging.Logger;
 
 /**
  * An example that counts words in Shakespeare and includes Dataflow best practices.
@@ -88,6 +92,8 @@ import com.google.cloud.dataflow.sdk.values.PCollection;
  * overridden with {@code --inputFile}.
  */
 public class WordCount {
+  private static final Logger LOG = Logger.getLogger(WordCount.class.getName()); //LoggerFactory.getLogger(WordCount.class);
+
 
   /**
    * Concept #2: You can make your pipeline code less verbose by defining your DoFns statically out-
@@ -113,6 +119,7 @@ public class WordCount {
       for (String word : words) {
         if (!word.isEmpty()) {
           c.output(word);
+          LOG.info("Extracted Word: " + word);
         }
       }
     }
